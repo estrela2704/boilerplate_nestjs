@@ -1,5 +1,6 @@
 import { PrismaService } from '@database/PrismaService';
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -85,6 +86,16 @@ export class CompanyService {
 
   async remove(id: number, userId: number): Promise<Company> {
     await this.verifyCompanyPermission(id, userId, 'excluir');
+
+    const relatedProductsCount = await this.prisma.product.count({
+      where: { companyId: id },
+    });
+
+    if (relatedProductsCount > 0) {
+      throw new BadRequestException(
+        'Não é possível deletar uma empresa que possui produtos vinculados.',
+      );
+    }
 
     return this.prisma.company.delete({
       where: { id },
