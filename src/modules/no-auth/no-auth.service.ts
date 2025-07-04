@@ -12,12 +12,16 @@ import { NewContactDto } from '../mail/dto/new-contact.dto';
 import { MailService } from '../mail/mail.service';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { TextQueriesDto } from './dto/text-queries.dto';
+import { CompanyService } from '../company/company.service';
+import { ProductService } from '../product/product.service';
 
 @Injectable()
 export class NoAuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly companyService: CompanyService,
+    private readonly productService: ProductService,
   ) {}
 
   async forgot(email: string): Promise<void> {
@@ -77,6 +81,33 @@ export class NoAuthService {
     const { type } = query;
 
     return this.prisma.text.findFirst({ where: { type } });
+  }
+
+  searchCompany(filter: string, page: number = 1, limit: number = 10) {
+    return this.companyService.search(filter, page, limit);
+  }
+
+  listAllCompanies(page = 1, limit = 10) {
+    return this.companyService.findAll(page, limit);
+  }
+
+  searchProduct(
+    filter: string,
+    orderByField: 'name' | 'price' = 'name',
+    orderDirection: 'asc' | 'desc' = 'asc',
+    page: number = 1,
+    limit: number = 10,
+  ) {
+    return this.productService.search(filter, orderByField, orderDirection, page, limit);
+  }
+
+  listAllProducts(
+    orderByField: 'name' | 'price' = 'name',
+    orderDirection: 'asc' | 'desc' = 'asc',
+    page = 1,
+    limit = 10,
+  ) {
+    return this.productService.findAll(orderByField, orderDirection, page, limit);
   }
 
   users() {

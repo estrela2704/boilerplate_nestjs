@@ -5,6 +5,7 @@ import {
   ApiInternalServerErrorResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 
@@ -20,6 +21,8 @@ import { ResponseTextDto } from './dto/response-text.dto';
 import { TextQueriesDto } from './dto/text-queries.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import { NoAuthService } from './no-auth.service';
+import { ResponseProductDto } from './dto/response-product.dto';
+import { ResponseCompanyDto } from './dto/response-company.dto';
 
 @Controller()
 export class NoAuthController {
@@ -118,5 +121,99 @@ export class NoAuthController {
   @ApiInternalServerErrorResponse({ description: 'Erro interno no servidor.' })
   mySelf(@CurrentUser() user: User) {
     return this.noAuthService.mySelf(user.id);
+  }
+
+  @IsPublic()
+  @Get('no-auth/companies/search')
+  @ApiTags('Sem autenticação')
+  @ApiOperation({ summary: 'Rota para filtrar empresas.' })
+  @ApiOkResponse({ type: [ResponseCompanyDto] })
+  @ApiQuery({ name: 'page', required: true, example: 1 })
+  @ApiQuery({ name: 'limit', required: true, example: 10 })
+  searchCompany(
+    @Query('filter') filter: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.noAuthService.searchCompany(filter, Number(page), Number(limit));
+  }
+
+  @IsPublic()
+  @Get('no-auth/companies')
+  @ApiTags('Sem autenticação')
+  @ApiOperation({ summary: 'Rota para retornar empresas.' })
+  @ApiOkResponse({ type: [ResponseCompanyDto] })
+  @ApiQuery({ name: 'page', required: true, example: 1 })
+  @ApiQuery({ name: 'limit', required: true, example: 10 })
+  listAllCompanies(@Query('page') page: number = 1, @Query('limit') limit: number = 10) {
+    return this.noAuthService.listAllCompanies(Number(page), Number(limit));
+  }
+
+  @IsPublic()
+  @Get('no-auth/products/search')
+  @ApiTags('Sem autenticação')
+  @ApiOperation({ summary: 'Rota para filtrar produtos.' })
+  @ApiOkResponse({ type: [ResponseProductDto] })
+  @ApiQuery({ name: 'page', required: true, example: 1 })
+  @ApiQuery({ name: 'limit', required: true, example: 10 })
+  @ApiQuery({
+    name: 'orderByField',
+    enum: ['name', 'price'],
+    required: false,
+    description: 'Campo para ordenar: name ou price',
+  })
+  @ApiQuery({
+    name: 'orderDirection',
+    enum: ['asc', 'desc'],
+    required: false,
+    description: 'Direção da ordenação: asc ou desc',
+  })
+  searchProduct(
+    @Query('filter') filter: string,
+    @Query('orderByField') orderByField?: 'name' | 'price',
+    @Query('orderDirection') orderDirection?: 'asc' | 'desc',
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.noAuthService.searchProduct(
+      filter,
+      orderByField,
+      orderDirection,
+      Number(page),
+      Number(limit),
+    );
+  }
+
+  @IsPublic()
+  @Get('no-auth/products')
+  @ApiTags('Sem autenticação')
+  @ApiOperation({ summary: 'Rota para retornar produtos.' })
+  @ApiOkResponse({ type: [ResponseProductDto] })
+  @ApiQuery({ name: 'page', required: true, example: 1 })
+  @ApiQuery({ name: 'limit', required: true, example: 10 })
+  @ApiQuery({
+    name: 'orderByField',
+    enum: ['name', 'price'],
+    required: false,
+    description: 'Campo para ordenar: name ou price',
+  })
+  @ApiQuery({
+    name: 'orderDirection',
+    enum: ['asc', 'desc'],
+    required: false,
+    description: 'Direção da ordenação: asc ou desc',
+  })
+  listAllProducts(
+    @Query('orderByField') orderByField?: 'name' | 'price',
+    @Query('orderDirection') orderDirection?: 'asc' | 'desc',
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.noAuthService.listAllProducts(
+      orderByField,
+      orderDirection,
+      Number(page),
+      Number(limit),
+    );
   }
 }
