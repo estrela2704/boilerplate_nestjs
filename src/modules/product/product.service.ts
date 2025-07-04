@@ -1,5 +1,5 @@
 import { PrismaService } from '@database/PrismaService';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, Product } from '@prisma/client';
 import { CreateProductDto } from './dto/CreateProductDto';
 import { CompanyService } from '../company/company.service';
@@ -11,8 +11,12 @@ export class ProductService {
     private companyService: CompanyService,
   ) {}
 
-  async create(data: CreateProductDto): Promise<Product> {
-    await this.companyService.findOne(data.companyId);
+  async create(data: CreateProductDto, userId: number): Promise<Product> {
+    const company = await this.companyService.findOne(data.companyId);
+
+    if (company.userId !== userId) {
+      throw new ForbiddenException('Você não tem permissão para criar produtos nessa empresa.');
+    }
 
     return this.prisma.product.create({
       data: {
@@ -95,8 +99,8 @@ export class ProductService {
     return product;
   }
 
-  async update(id: number, data: Prisma.ProductUpdateInput): Promise<Product> {
-    await this.findOne(id);
+  async update(id: number, data: Prisma.ProductUpdateInput, userId: number): Promise<Product> {
+    await this.verifyProductPermission(id, userId, 'alterar');
 
     return this.prisma.product.update({
       where: { id },
@@ -104,11 +108,21 @@ export class ProductService {
     });
   }
 
-  async remove(id: number): Promise<Product> {
-    await this.findOne(id);
+  async remove(id: number, userId: number): Promise<Product> {
+    await this.verifyProductPermission(id, userId, 'excluir');
 
     return this.prisma.product.delete({
       where: { id },
     });
+  }
+
+  private async verifyProductPermission(productId: number, userId: number, method: string) {
+    const product = await this.findOne(productId);
+
+    const company = await this.companyService.findOne(product.companyId);
+
+    if (company.userId !== userId) {
+      throw new ForbiddenException(`Você não tem permissão para ${method} este produto.`);
+    }
   }
 }

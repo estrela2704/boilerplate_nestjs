@@ -24,7 +24,8 @@ model User {
   updatedAt        DateTime          @updatedAt
   adminPermissions AdminPermission[]
   files            File[]
-
+  companies  Company[]
+  
   @@map("users")
 }
 
@@ -65,6 +66,8 @@ model Company {
   name      String
   cnpj      String    @unique
   address   String?
+  userId    Int    
+  user      User     @relation(fields: [userId], references: [id])
   products  Product[]
 
   @@map("companies")

@@ -21,10 +21,11 @@ import {
   ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
 import { CompanyService } from './company.service';
-import { Company } from '@prisma/client';
+import { Company, User } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateCompanyDto } from './dto/CreateCompanyDto';
 import { UpdateCompanyDto } from './dto/UpdateCompanyDto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('Empresas')
 @ApiBearerAuth()
@@ -44,8 +45,8 @@ export class CompanyController {
   @ApiForbiddenResponse({ description: 'Acesso não autorizado.' })
   @ApiInternalServerErrorResponse({ description: 'Erro interno no servidor.' })
   @ApiBody({ type: CreateCompanyDto })
-  async create(@Body() data: CreateCompanyDto): Promise<Company> {
-    return await this.companyService.create(data);
+  async create(@Body() data: CreateCompanyDto, @CurrentUser() user: User): Promise<Company> {
+    return await this.companyService.create({ ...data, user: { connect: { id: user.id } } });
   }
 
   @Put(':id')
@@ -59,8 +60,12 @@ export class CompanyController {
   @ApiForbiddenResponse({ description: 'Acesso não autorizado.' })
   @ApiInternalServerErrorResponse({ description: 'Erro interno no servidor.' })
   @ApiBody({ type: UpdateCompanyDto })
-  async update(@Param('id', ParseIntPipe) id: number, @Body() data: UpdateCompanyDto) {
-    return this.companyService.update(id, data);
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: UpdateCompanyDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.companyService.update(id, data, user.id);
   }
 
   @Delete(':id')
@@ -73,7 +78,7 @@ export class CompanyController {
   @ApiUnauthorizedResponse({ description: 'Token inválido.' })
   @ApiForbiddenResponse({ description: 'Acesso não autorizado.' })
   @ApiInternalServerErrorResponse({ description: 'Erro interno no servidor.' })
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return this.companyService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
+    return this.companyService.remove(id, user.id);
   }
 }

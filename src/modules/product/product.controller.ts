@@ -22,9 +22,10 @@ import {
 } from '@nestjs/swagger';
 import { ProductService } from './product.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Product } from '@prisma/client';
+import { Product, User } from '@prisma/client';
 import { UpdateProductDto } from './dto/UpdateProductDto';
 import { CreateProductDto } from './dto/CreateProductDto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('Produtos')
 @ApiBearerAuth()
@@ -44,8 +45,8 @@ export class ProductController {
   @ApiForbiddenResponse({ description: 'Acesso não autorizado.' })
   @ApiInternalServerErrorResponse({ description: 'Erro interno no servidor.' })
   @ApiBody({ type: CreateProductDto })
-  async create(@Body() data: CreateProductDto): Promise<Product> {
-    return this.productService.create(data);
+  async create(@Body() data: CreateProductDto, @CurrentUser() user: User): Promise<Product> {
+    return this.productService.create(data, user.id);
   }
 
   @Put(':id')
@@ -58,8 +59,9 @@ export class ProductController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() data: UpdateProductDto,
+    @CurrentUser() user: User,
   ): Promise<Product> {
-    return this.productService.update(id, data);
+    return this.productService.update(id, data, user.id);
   }
 
   @Delete(':id')
@@ -68,7 +70,7 @@ export class ProductController {
     security: [{ bearerAuth: [] }],
   })
   @ApiResponse({ status: 200, description: 'Produto deletado com sucesso.' })
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<Product> {
-    return this.productService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User): Promise<Product> {
+    return this.productService.remove(id, user.id);
   }
 }

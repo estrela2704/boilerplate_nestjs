@@ -7,11 +7,13 @@ export async function seedCompany(prisma: PrismaClient) {
         name: 'Empresa Alpha',
         cnpj: '12345678000100',
         address: 'Rua A, 123',
+        userId: 2,
       },
       {
         name: 'Empresa Beta',
         cnpj: '98765432000199',
         address: 'Avenida B, 456',
+        userId: 2,
       },
     ],
     skipDuplicates: true,

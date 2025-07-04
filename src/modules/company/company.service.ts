@@ -1,5 +1,10 @@
 import { PrismaService } from '@database/PrismaService';
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Company, Prisma } from '@prisma/client';
 
 @Injectable()
@@ -7,16 +12,7 @@ export class CompanyService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: Prisma.CompanyCreateInput): Promise<Company> {
-    const cnpjValue =
-      typeof data.cnpj === 'string' ? data.cnpj : (data.cnpj as any)?.set ?? undefined;
-
-    const existingCompany = await this.prisma.company.findUnique({
-      where: { cnpj: cnpjValue },
-    });
-
-    if (existingCompany) {
-      throw new ConflictException('Já existe uma empresa com esse CNPJ.');
-    }
+    await this.verifyCompanyByCpf(String(data.cnpj));
 
     return this.prisma.company.create({ data });
   }
@@ -76,8 +72,10 @@ export class CompanyService {
     return company;
   }
 
-  async update(id: number, data: Prisma.CompanyUpdateInput): Promise<Company> {
-    await this.findOne(id);
+  async update(id: number, data: Prisma.CompanyUpdateInput, userId: number): Promise<Company> {
+    await this.verifyCompanyPermission(id, userId, 'alterar');
+
+    await this.verifyCompanyByCpf(String(data.cnpj));
 
     return this.prisma.company.update({
       where: { id },
@@ -85,11 +83,31 @@ export class CompanyService {
     });
   }
 
-  async remove(id: number): Promise<Company> {
-    await this.findOne(id);
+  async remove(id: number, userId: number): Promise<Company> {
+    await this.verifyCompanyPermission(id, userId, 'excluir');
 
     return this.prisma.company.delete({
       where: { id },
     });
+  }
+
+  private async verifyCompanyPermission(companyId: number, userId: number, method: string) {
+    const company = await this.findOne(companyId);
+
+    if (company.userId !== userId) {
+      throw new ForbiddenException(`Você não tem permissão para ${method} esta empresa.`);
+    }
+  }
+
+  private async verifyCompanyByCpf(cnpj: string) {
+    const cnpjValue = typeof cnpj === 'string' ? cnpj : (cnpj as any)?.set ?? undefined;
+
+    const existingCompany = await this.prisma.company.findUnique({
+      where: { cnpj: cnpjValue },
+    });
+
+    if (existingCompany) {
+      throw new ConflictException('Já existe uma empresa com esse CNPJ.');
+    }
   }
 }
