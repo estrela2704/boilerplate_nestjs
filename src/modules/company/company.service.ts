@@ -1,12 +1,23 @@
 import { PrismaService } from '@database/PrismaService';
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Company, Prisma } from '@prisma/client';
 
 @Injectable()
 export class CompanyService {
   constructor(private prisma: PrismaService) {}
 
-  create(data: Prisma.CompanyCreateInput): Promise<Company> {
+  async create(data: Prisma.CompanyCreateInput): Promise<Company> {
+    const cnpjValue =
+      typeof data.cnpj === 'string' ? data.cnpj : (data.cnpj as any)?.set ?? undefined;
+
+    const existingCompany = await this.prisma.company.findUnique({
+      where: { cnpj: cnpjValue },
+    });
+
+    if (existingCompany) {
+      throw new ConflictException('Já existe uma empresa com esse CNPJ.');
+    }
+
     return this.prisma.company.create({ data });
   }
 
@@ -53,21 +64,30 @@ export class CompanyService {
     return { data, total, page, limit };
   }
 
-  findOne(id: number): Promise<Company | null> {
-    return this.prisma.company.findUnique({
+  async findOne(id: number): Promise<Company> {
+    const company = await this.prisma.company.findUnique({
       where: { id },
-      include: { products: true },
     });
+
+    if (!company) {
+      throw new NotFoundException(`Empresa com ID ${id} não encontrada.`);
+    }
+
+    return company;
   }
 
-  update(id: number, data: Prisma.CompanyUpdateInput): Promise<Company> {
+  async update(id: number, data: Prisma.CompanyUpdateInput): Promise<Company> {
+    await this.findOne(id);
+
     return this.prisma.company.update({
       where: { id },
       data,
     });
   }
 
-  remove(id: number): Promise<Company> {
+  async remove(id: number): Promise<Company> {
+    await this.findOne(id);
+
     return this.prisma.company.delete({
       where: { id },
     });

@@ -13,7 +13,6 @@ import { MobileModule } from './modules/mobile/mobile.module';
 import { WebModule } from './modules/web/web.module';
 import { CompanyModule } from './modules/company/company.module';
 import { ProductModule } from './modules/product/product.module';
-
 @Module({
   imports: [
     ThrottlerModule.forRoot([

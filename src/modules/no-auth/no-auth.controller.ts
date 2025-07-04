@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 
 import {
   ApiBadRequestResponse,
@@ -24,13 +24,13 @@ import { NoAuthService } from './no-auth.service';
 import { ResponseProductDto } from './dto/response-product.dto';
 import { ResponseCompanyDto } from './dto/response-company.dto';
 
-@Controller()
+@ApiTags('Sem autenticação')
+@Controller('no-auth')
 export class NoAuthController {
   constructor(private readonly noAuthService: NoAuthService) {}
 
   @IsPublic()
-  @Post('no-auth/forgot')
-  @ApiTags('Sem autenticação')
+  @Post('forgot')
   @ApiOperation({ summary: 'Rota para envio de código ao email.' })
   @ApiOkResponse({ type: ImessageEntity })
   @ApiBadRequestResponse({ description: 'Requisição inválida' })
@@ -42,8 +42,7 @@ export class NoAuthController {
   }
 
   @IsPublic()
-  @Post('no-auth/verify-code')
-  @ApiTags('Sem autenticação')
+  @Post('verify-code')
   @ApiOperation({
     summary:
       'Rota para verificação do código (somente para mobile, web não precisa consumir essa rota!).',
@@ -58,8 +57,7 @@ export class NoAuthController {
   }
 
   @IsPublic()
-  @Post('no-auth/reset')
-  @ApiTags('Sem autenticação')
+  @Post('reset')
   @ApiOperation({ summary: 'Rota para redefinir senha.' })
   @ApiOkResponse({ type: ImessageEntity })
   @ApiBadRequestResponse({ description: 'Requisição inválida' })
@@ -70,8 +68,7 @@ export class NoAuthController {
   }
 
   @IsPublic()
-  @Post('no-auth/contact-us')
-  @ApiTags('Sem autenticação')
+  @Post('contact-us')
   @ApiOperation({ summary: 'Rota para fale conosco.' })
   @ApiOkResponse({ type: ImessageEntity })
   @ApiBadRequestResponse({ description: 'Requisição inválida' })
@@ -82,8 +79,7 @@ export class NoAuthController {
   }
 
   @IsPublic()
-  @Get('no-auth/texts')
-  @ApiTags('Sem autenticação')
+  @Get('texts')
   @ApiOperation({ summary: 'Rota para recuperar textos.' })
   @ApiOkResponse({ type: ResponseTextDto })
   @ApiBadRequestResponse({ description: 'Requisição inválida' })
@@ -93,17 +89,15 @@ export class NoAuthController {
   }
 
   @IsPublic()
-  @ApiTags('Sem autenticação')
   @ApiOperation({ summary: 'Rota para listar todos os usuários (durante desenvolvimento).' })
   @ApiOkResponse({ type: [ResponseAllUserDto] })
-  @Get('no-auth/users')
+  @Get('users')
   users() {
     return this.noAuthService.users();
   }
 
   @IsPublic()
-  @Get('no-auth/health-check')
-  @ApiTags('Sem autenticação')
+  @Get('health-check')
   @ApiOperation({ summary: 'Rota para verificar status do servidor.' })
   @ApiOkResponse({ description: 'Servidor UP' })
   healthCheck() {
@@ -124,8 +118,15 @@ export class NoAuthController {
   }
 
   @IsPublic()
-  @Get('no-auth/companies/search')
-  @ApiTags('Sem autenticação')
+  @Get('companies/:id')
+  @ApiOperation({ summary: 'Rota para retornar empresa por ID.' })
+  @ApiOkResponse({ type: ResponseCompanyDto })
+  searchCompanyById(@Param('id') id: string) {
+    return this.noAuthService.searchCompanyById(parseInt(id));
+  }
+
+  @IsPublic()
+  @Get('companies/search')
   @ApiOperation({ summary: 'Rota para filtrar empresas.' })
   @ApiOkResponse({ type: [ResponseCompanyDto] })
   @ApiQuery({ name: 'page', required: true, example: 1 })
@@ -139,8 +140,7 @@ export class NoAuthController {
   }
 
   @IsPublic()
-  @Get('no-auth/companies')
-  @ApiTags('Sem autenticação')
+  @Get('companies')
   @ApiOperation({ summary: 'Rota para retornar empresas.' })
   @ApiOkResponse({ type: [ResponseCompanyDto] })
   @ApiQuery({ name: 'page', required: true, example: 1 })
@@ -150,8 +150,15 @@ export class NoAuthController {
   }
 
   @IsPublic()
-  @Get('no-auth/products/search')
-  @ApiTags('Sem autenticação')
+  @Get('products/:id')
+  @ApiOperation({ summary: 'Rota para retornar produto por ID.' })
+  @ApiOkResponse({ type: ResponseCompanyDto })
+  searchProductById(@Param('id') id: string) {
+    return this.noAuthService.searchProductById(parseInt(id));
+  }
+
+  @IsPublic()
+  @Get('products/search')
   @ApiOperation({ summary: 'Rota para filtrar produtos.' })
   @ApiOkResponse({ type: [ResponseProductDto] })
   @ApiQuery({ name: 'page', required: true, example: 1 })
@@ -185,8 +192,7 @@ export class NoAuthController {
   }
 
   @IsPublic()
-  @Get('no-auth/products')
-  @ApiTags('Sem autenticação')
+  @Get('products')
   @ApiOperation({ summary: 'Rota para retornar produtos.' })
   @ApiOkResponse({ type: [ResponseProductDto] })
   @ApiQuery({ name: 'page', required: true, example: 1 })

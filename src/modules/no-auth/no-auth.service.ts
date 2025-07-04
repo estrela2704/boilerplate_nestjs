@@ -83,31 +83,39 @@ export class NoAuthService {
     return this.prisma.text.findFirst({ where: { type } });
   }
 
-  searchCompany(filter: string, page: number = 1, limit: number = 10) {
-    return this.companyService.search(filter, page, limit);
+  async searchCompanyById(id: number) {
+    return await this.companyService.findOne(id);
   }
 
-  listAllCompanies(page = 1, limit = 10) {
-    return this.companyService.findAll(page, limit);
+  async searchCompany(filter: string, page: number = 1, limit: number = 10) {
+    return await this.companyService.search(filter, page, limit);
   }
 
-  searchProduct(
+  async listAllCompanies(page = 1, limit = 10) {
+    return await this.companyService.findAll(page, limit);
+  }
+
+  async searchProduct(
     filter: string,
     orderByField: 'name' | 'price' = 'name',
     orderDirection: 'asc' | 'desc' = 'asc',
     page: number = 1,
     limit: number = 10,
   ) {
-    return this.productService.search(filter, orderByField, orderDirection, page, limit);
+    return await this.productService.search(filter, orderByField, orderDirection, page, limit);
   }
 
-  listAllProducts(
+  async searchProductById(id: number) {
+    return await this.productService.findOne(id);
+  }
+
+  async listAllProducts(
     orderByField: 'name' | 'price' = 'name',
     orderDirection: 'asc' | 'desc' = 'asc',
     page = 1,
     limit = 10,
   ) {
-    return this.productService.findAll(orderByField, orderDirection, page, limit);
+    return await this.productService.findAll(orderByField, orderDirection, page, limit);
   }
 
   users() {
